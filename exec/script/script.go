@@ -19,7 +19,7 @@ package script
 import (
 	"context"
 	"fmt"
-	"github.com/chaosblade-io/chaosblade-exec-os/exec"
+	"github.com/deepsola/chaosblade-exec-os/exec"
 	"strings"
 
 	"github.com/chaosblade-io/chaosblade-spec-go/spec"

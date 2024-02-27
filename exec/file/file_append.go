@@ -20,16 +20,16 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/chaosblade-io/chaosblade-exec-os/exec"
 	"github.com/chaosblade-io/chaosblade-spec-go/log"
+	"github.com/deepsola/chaosblade-exec-os/exec"
 	"math/rand"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/chaosblade-io/chaosblade-exec-os/exec/category"
 	"github.com/chaosblade-io/chaosblade-spec-go/spec"
+	"github.com/deepsola/chaosblade-exec-os/exec/category"
 )
 
 const AppendFileBin = "chaos_appendfile"
@@ -71,7 +71,7 @@ func NewFileAppendActionSpec() spec.ExpActionCommandSpec {
 					Desc:     "cgroup root path, default value /sys/fs/cgroup",
 					NoArgs:   false,
 					Required: false,
-					Default: "/sys/fs/cgroup",
+					Default:  "/sys/fs/cgroup",
 				},
 			},
 			ActionExecutor: &FileAppendActionExecutor{},
@@ -131,7 +131,7 @@ func (f *FileAppendActionExecutor) Exec(uid string, ctx context.Context, model *
 	}
 
 	if !exec.CheckFilepathExists(ctx, f.channel, filepath) {
-		log.Errorf(ctx,"`%s`: file does not exist", filepath)
+		log.Errorf(ctx, "`%s`: file does not exist", filepath)
 		return spec.ResponseFailWithFlags(spec.ParameterInvalid, "filepath", filepath, "the file does not exist")
 	}
 
@@ -147,7 +147,7 @@ func (f *FileAppendActionExecutor) Exec(uid string, ctx context.Context, model *
 		var err error
 		count, err = strconv.Atoi(countStr)
 		if err != nil || count < 1 {
-			log.Errorf(ctx,"`%s` value must be a positive integer", "count")
+			log.Errorf(ctx, "`%s` value must be a positive integer", "count")
 			return spec.ResponseFailWithFlags(spec.ParameterIllegal, "count", count, "it must be a positive integer")
 		}
 	}
@@ -187,7 +187,7 @@ func (f *FileAppendActionExecutor) start(filepath string, content string, count 
 }
 
 func (f *FileAppendActionExecutor) stop(filepath string, ctx context.Context) *spec.Response {
-	ctx = context.WithValue(ctx,"bin", AppendFileBin)
+	ctx = context.WithValue(ctx, "bin", AppendFileBin)
 	return exec.Destroy(ctx, f.channel, "file append")
 }
 

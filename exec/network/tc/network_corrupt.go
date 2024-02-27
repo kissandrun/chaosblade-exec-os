@@ -19,9 +19,9 @@ package tc
 import (
 	"context"
 	"fmt"
-	"github.com/chaosblade-io/chaosblade-exec-os/exec/category"
 	"github.com/chaosblade-io/chaosblade-spec-go/log"
 	"github.com/chaosblade-io/chaosblade-spec-go/spec"
+	"github.com/deepsola/chaosblade-exec-os/exec/category"
 )
 
 type CorruptActionSpec struct {
@@ -84,7 +84,7 @@ func (ce *NetworkCorruptExecutor) Exec(uid string, ctx context.Context, model *s
 
 	netInterface := model.ActionFlags["interface"]
 	if netInterface == "" {
-		log.Errorf(ctx,"interface is nil")
+		log.Errorf(ctx, "interface is nil")
 		return spec.ResponseFailWithFlags(spec.ParameterLess, "interface")
 	}
 	if _, ok := spec.IsDestroy(ctx); ok {

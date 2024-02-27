@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/chaosblade-io/chaosblade-exec-os/exec/category"
 	"github.com/chaosblade-io/chaosblade-spec-go/log"
 	"github.com/chaosblade-io/chaosblade-spec-go/spec"
+	"github.com/deepsola/chaosblade-exec-os/exec/category"
 )
 
 const TravelTimeBin = "chaos_timetravel"

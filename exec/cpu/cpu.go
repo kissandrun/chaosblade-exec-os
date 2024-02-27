@@ -19,8 +19,8 @@ package cpu
 import (
 	"context"
 	"fmt"
-	"github.com/chaosblade-io/chaosblade-exec-os/exec"
 	"github.com/chaosblade-io/chaosblade-spec-go/log"
+	"github.com/deepsola/chaosblade-exec-os/exec"
 	"os"
 	os_exec "os/exec"
 	"runtime"
@@ -32,7 +32,7 @@ import (
 	"github.com/chaosblade-io/chaosblade-spec-go/spec"
 	"github.com/chaosblade-io/chaosblade-spec-go/util"
 
-	"github.com/chaosblade-io/chaosblade-exec-os/exec/category"
+	"github.com/deepsola/chaosblade-exec-os/exec/category"
 	_ "go.uber.org/automaxprocs/maxprocs"
 )
 
@@ -282,7 +282,7 @@ func (ce *cpuExecutor) start(ctx context.Context, cpuList string, cpuCount, cpuP
 		}
 	}
 
-	// make CPU slowly climb to some level, to simulate slow resource competition 
+	// make CPU slowly climb to some level, to simulate slow resource competition
 	// which system faults cannot be quickly noticed by monitoring system.
 	slope(ctx, cpuPercent, climbTime, &slopePercent, percpu, cpuIndex)
 
