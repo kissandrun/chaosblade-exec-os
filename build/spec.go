@@ -17,17 +17,17 @@
 package main
 
 import (
-	"github.com/chaosblade-io/chaosblade-exec-os/exec/cpu"
-	"github.com/chaosblade-io/chaosblade-exec-os/exec/disk"
-	"github.com/chaosblade-io/chaosblade-exec-os/exec/file"
-	"github.com/chaosblade-io/chaosblade-exec-os/exec/kernel"
-	"github.com/chaosblade-io/chaosblade-exec-os/exec/mem"
-	"github.com/chaosblade-io/chaosblade-exec-os/exec/model"
-	"github.com/chaosblade-io/chaosblade-exec-os/exec/network"
-	"github.com/chaosblade-io/chaosblade-exec-os/exec/process"
-	"github.com/chaosblade-io/chaosblade-exec-os/exec/script"
-	"github.com/chaosblade-io/chaosblade-exec-os/exec/systemd"
-	"github.com/chaosblade-io/chaosblade-exec-os/exec/time"
+	"github.com/deepsola/chaosblade-exec-os/exec/cpu"
+	"github.com/deepsola/chaosblade-exec-os/exec/disk"
+	"github.com/deepsola/chaosblade-exec-os/exec/file"
+	"github.com/deepsola/chaosblade-exec-os/exec/kernel"
+	"github.com/deepsola/chaosblade-exec-os/exec/mem"
+	"github.com/deepsola/chaosblade-exec-os/exec/model"
+	"github.com/deepsola/chaosblade-exec-os/exec/network"
+	"github.com/deepsola/chaosblade-exec-os/exec/process"
+	"github.com/deepsola/chaosblade-exec-os/exec/script"
+	"github.com/deepsola/chaosblade-exec-os/exec/systemd"
+	"github.com/deepsola/chaosblade-exec-os/exec/time"
 	"log"
 	"os"
 
