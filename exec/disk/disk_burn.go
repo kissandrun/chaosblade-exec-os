@@ -19,15 +19,12 @@ package disk
 import (
 	"context"
 	"fmt"
-	"github.com/chaosblade-io/chaosblade-spec-go/channel"
 	"github.com/chaosblade-io/chaosblade-spec-go/log"
 	"github.com/deepsola/chaosblade-exec-os/exec"
 	"path"
 	"strings"
 
 	"github.com/chaosblade-io/chaosblade-spec-go/spec"
-	"github.com/chaosblade-io/chaosblade-spec-go/util"
-
 	"github.com/deepsola/chaosblade-exec-os/exec/category"
 )
 
@@ -112,12 +109,9 @@ func (*BurnIOExecutor) Name() string {
 	return "burn"
 }
 
-var localChannel = channel.NewLocalChannel()
-
 func (be *BurnIOExecutor) Exec(uid string, ctx context.Context, model *spec.ExpModel) *spec.Response {
 	commands := []string{"rm", "dd"}
-	// use local channel
-	if response, ok := localChannel.IsAllCommandsAvailable(ctx, commands); !ok {
+	if response, ok := be.channel.IsAllCommandsAvailable(ctx, commands); !ok {
 		return response
 	}
 	directory := model.ActionFlags["path"]
@@ -134,10 +128,17 @@ func (be *BurnIOExecutor) Exec(uid string, ctx context.Context, model *spec.ExpM
 		}
 		return be.stop(ctx, readExists, writeExists, directory)
 	}
-	if !util.IsDir(directory) {
+
+	response := be.channel.Run(ctx, "test", fmt.Sprintf(`-d %s`, directory))
+	if !response.Success {
 		log.Errorf(ctx, "`%s`: path is illegal, is not a directory", directory)
 		return spec.ResponseFailWithFlags(spec.ParameterIllegal, "path", directory, "it must be a directory")
 	}
+
+	//if !util.IsDir(directory) {
+	//	log.Errorf(ctx, "`%s`: path is illegal, is not a directory", directory)
+	//	return spec.ResponseFailWithFlags(spec.ParameterIllegal, "path", directory, "it must be a directory")
+	//}
 	readExists := model.ActionFlags["read"] == "true"
 	writeExists := model.ActionFlags["write"] == "true"
 	if !readExists && !writeExists {
@@ -163,13 +164,13 @@ func (be *BurnIOExecutor) start(ctx context.Context, read, write bool, directory
 
 func (be *BurnIOExecutor) stop(ctx context.Context, read, write bool, directory string) *spec.Response {
 	if read {
-		resp := localChannel.Run(ctx, "rm", fmt.Sprintf("-rf %s*", path.Join(directory, readFile)))
+		resp := be.channel.Run(ctx, "rm", fmt.Sprintf("-rf %s*", path.Join(directory, readFile)))
 		if !resp.Success {
 			log.Errorf(ctx, "clean read file: %s", resp.Err)
 		}
 	}
 	if write {
-		resp := localChannel.Run(ctx, "rm", fmt.Sprintf("-rf %s*", path.Join(directory, writeFile)))
+		resp := be.channel.Run(ctx, "rm", fmt.Sprintf("-rf %s*", path.Join(directory, writeFile)))
 		if !resp.Success {
 			log.Errorf(ctx, "clean write file: %s", resp.Err)
 		}
@@ -190,10 +191,10 @@ const count = 100
 // write burn
 func burnWrite(ctx context.Context, directory, size string, cl spec.Channel) {
 	tmpFileForWrite := path.Join(directory, writeFile)
-	_, _, ddRunningWriteArg := getArgs(ctx, localChannel)
+	_, _, ddRunningWriteArg := getArgs(ctx, cl)
 	for {
 		args := fmt.Sprintf(ddRunningWriteArg, tmpFileForWrite, size, count)
-		response := localChannel.Run(ctx, "dd", args)
+		response := cl.Run(ctx, "dd", args)
 		if !response.Success {
 			log.Errorf(ctx, "disk burn write, run dd err: %s", response.Err)
 			break
@@ -205,17 +206,16 @@ func burnWrite(ctx context.Context, directory, size string, cl spec.Channel) {
 func burnRead(ctx context.Context, directory, size string, cl spec.Channel) {
 	// create a 600M file under the directory
 	tmpFileForRead := path.Join(directory, readFile)
-	ddCreateArg, ddRunningReadArg, _ := getArgs(ctx, localChannel)
+	ddCreateArg, ddRunningReadArg, _ := getArgs(ctx, cl)
 	createArgs := fmt.Sprintf(ddCreateArg, tmpFileForRead, 6, count)
-	response := localChannel.Run(ctx, "dd", createArgs)
+	response := cl.Run(ctx, "dd", createArgs)
 	if !response.Success {
 		log.Errorf(ctx, "disk burn read, run dd err: %s", response.Err)
 	}
 
 	for {
 		args := fmt.Sprintf(ddRunningReadArg, tmpFileForRead, size, count)
-		//run with local channel
-		response := localChannel.Run(ctx, "dd", args)
+		response := cl.Run(ctx, "dd", args)
 		if !response.Success {
 			log.Errorf(ctx, "disk burn read, run dd err: %s", response.Err)
 			break
