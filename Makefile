@@ -10,7 +10,7 @@ GO_FLAGS=-ldflags="-s -w"
 UNAME := $(shell uname)
 
 ifeq ($(BLADE_VERSION), )
-	BLADE_VERSION=1.7.3
+	BLADE_VERSION=2.0.0
 endif
 
 BUILD_TARGET=target
@@ -18,7 +18,7 @@ BUILD_TARGET_DIR_NAME=chaosblade-$(BLADE_VERSION)
 BUILD_TARGET_PKG_DIR=$(BUILD_TARGET)/chaosblade-$(BLADE_VERSION)
 BUILD_TARGET_BIN=$(BUILD_TARGET_PKG_DIR)/bin
 BUILD_TARGET_YAML=$(BUILD_TARGET_PKG_DIR)/yaml
-BUILD_IMAGE_PATH=build/image/blade
+BUILD_IMAGE_PATH=build/image/new-chaosblade-tool
 # cache downloaded file
 BUILD_TARGET_CACHE=$(BUILD_TARGET)/cache
 
@@ -55,6 +55,16 @@ build_linux:
 		-w /chaosblade-exec-os \
 		chaosblade-os-build-musl:latest
 
+# build chaosblade image for chaos
+build_image: ## Build chaosblade-tool image
+	rm -rf $(BUILD_IMAGE_PATH)/chaos_os
+	cp $(BUILD_TARGET_BIN)/chaos_os $(BUILD_IMAGE_PATH)/chaos_os
+	docker build -f $(BUILD_IMAGE_PATH)/Dockerfile \
+		--build-arg BLADE_VERSION=$(BLADE_VERSION) \
+		-t wangtong719/chaosblade-tool:$(BLADE_VERSION) \
+		$(BUILD_IMAGE_PATH)
+	rm -rf $(BUILD_IMAGE_PATH)/chaos_os
+
 # test
 test:
 	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
@@ -62,4 +72,4 @@ test:
 clean:
 	go clean ./...
 	rm -rf $(BUILD_TARGET)
-	rm -rf $(BUILD_IMAGE_PATH)/$(BUILD_TARGET_DIR_NAME)
+	rm -rf $(BUILD_IMAGE_PATH)/chaos_os
