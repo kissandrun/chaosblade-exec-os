@@ -200,7 +200,7 @@ func startFill(ctx context.Context, uid, directory, size, percent, reserve strin
 		return spec.ResponseFailWithFlags(spec.ParameterInvalid, "directory", directory, "less --size or --percent or --reserve flag")
 	}
 	dataFile := path.Join(directory, fillDataFile)
-	size, err := calculateFileSize(ctx, directory, size, percent, reserve)
+	size, err := calculateFileSize(ctx, directory, size, percent, reserve, cl)
 	if err != nil {
 		return spec.ReturnFail(spec.OsCmdExecFailed, fmt.Sprintf("calculate size err, %v", err))
 	}
@@ -235,36 +235,70 @@ var getSysStatFunc = func(directory string) *syscall.Statfs_t {
 	return &stat
 }
 
+var getDiskTotalSize = func(ctx context.Context, directory string, cl spec.Channel) (int, error) {
+	response := cl.Run(ctx, "df", fmt.Sprintf(`-m %s | sed -n '2p' | sed -e 's/  */\n/g' | sed -n '2p'`, directory))
+	if !response.Success {
+		return 0, fmt.Errorf("failed to get disk total size, %s", response.Print())
+	}
+
+	totalSize := fmt.Sprint(response.Result)
+	totalSizeInt, err := strconv.Atoi(strings.TrimSpace(totalSize))
+	if err != nil {
+		return 0, err
+	}
+	return totalSizeInt, nil
+}
+
+var getDiskUsedSize = func(ctx context.Context, directory string, cl spec.Channel) (int, error) {
+	response := cl.Run(ctx, "df", fmt.Sprintf(`-m %s | sed -n '2p' | sed -e 's/  */\n/g' | sed -n '3p'`, directory))
+	if !response.Success {
+		return 0, fmt.Errorf("failed to get disk used size, %s", response.Print())
+	}
+
+	usedSize := fmt.Sprint(response.Result)
+	usedSizeInt, err := strconv.Atoi(strings.TrimSpace(usedSize))
+	if err != nil {
+		return 0, err
+	}
+	return usedSizeInt, nil
+}
+
 // calculateFileSize returns the size which should be filled, unit is M
-func calculateFileSize(ctx context.Context, directory, size, percent, reserve string) (string, error) {
+func calculateFileSize(ctx context.Context, directory, size, percent, reserve string, cl spec.Channel) (string, error) {
 	if percent == "" && reserve == "" {
 		return size, nil
 	}
-	stat := getSysStatFunc(directory)
-	allBytes := stat.Blocks * uint64(stat.Bsize)
-	availableBytes := stat.Bavail * uint64(stat.Bsize)
-	usedBytes := allBytes - availableBytes
+	allMBytes, err := getDiskTotalSize(ctx, directory, cl)
+	if err != nil {
+		return "", err
+	}
+	usedMBytes, err := getDiskUsedSize(ctx, directory, cl)
+	if err != nil {
+		return "", err
+	}
+	availableMBytes := allMBytes - usedMBytes
 
 	if percent != "" {
 		p, err := strconv.Atoi(percent)
 		if err != nil {
 			return "", err
 		}
-		usedPercentage, _ := strconv.ParseFloat(fmt.Sprintf("%.2f", float64(usedBytes)/float64(allBytes)), 64)
+		usedPercentage, _ := strconv.ParseFloat(fmt.Sprintf("%.2f", float64(usedMBytes)/float64(allMBytes)), 64)
 		expectedPercentage, _ := strconv.ParseFloat(fmt.Sprintf("%.2f", float64(p)/100.0), 64)
 		if usedPercentage >= expectedPercentage {
 			return "", fmt.Errorf("the disk has been used %.2f, large than expected", usedPercentage)
 		}
 		remainderPercentage := expectedPercentage - usedPercentage
-		log.Debugf(ctx, "remainderPercentage: %f", remainderPercentage)
-		expectSize := math.Floor(remainderPercentage * float64(allBytes) / (1024.0 * 1024.0))
+		log.Infof(ctx, "remainderPercentage: %f", remainderPercentage)
+		expectSize := math.Floor(remainderPercentage * float64(allMBytes))
+		log.Infof(ctx, "expectSize: %f", expectSize)
 		return fmt.Sprintf("%.f", expectSize), nil
 	} else {
 		r, err := strconv.ParseFloat(reserve, 64)
 		if err != nil {
 			return "", err
 		}
-		availableMB := float64(availableBytes) / (1024.0 * 1024.0)
+		availableMB := float64(availableMBytes)
 		if availableMB <= r {
 			return "", fmt.Errorf("the disk has available size %.2f, less than expected", availableMB)
 		}

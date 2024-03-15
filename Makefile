@@ -10,7 +10,7 @@ GO_FLAGS=-ldflags="-s -w"
 UNAME := $(shell uname)
 
 ifeq ($(BLADE_VERSION), )
-	BLADE_VERSION=2.0.0
+	BLADE_VERSION=2.0.5
 endif
 
 BUILD_TARGET=target
