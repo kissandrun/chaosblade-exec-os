@@ -41,7 +41,7 @@ build_yaml: build/spec.go
 
 build_os: main.go
 	$(GO) build $(GO_FLAGS) -o $(BUILD_TARGET_BIN)/chaos_os $<
-	cp extra/strace $(BUILD_TARGET_BIN)
+	cp extra/* $(BUILD_TARGET_BIN)
 
 cp_strace:
 	cp extra/strace $(BUILD_TARGET_BIN)/
@@ -59,9 +59,10 @@ build_linux:
 build_image: ## Build chaosblade-tool image
 	rm -rf $(BUILD_IMAGE_PATH)/chaos_os
 	cp $(BUILD_TARGET_BIN)/chaos_os $(BUILD_IMAGE_PATH)/chaos_os
+	cp $(BUILD_TARGET_BIN)/disk_controller.py $(BUILD_IMAGE_PATH)/disk_controller.py
 	docker build -f $(BUILD_IMAGE_PATH)/Dockerfile \
 		--build-arg BLADE_VERSION=$(BLADE_VERSION) \
-		-t wangtong719/chaosblade-tool:$(BLADE_VERSION) \
+		-t ghcr.io/chaosblade-io/chaosblade-tool:1.7.3 \
 		$(BUILD_IMAGE_PATH)
 	rm -rf $(BUILD_IMAGE_PATH)/chaos_os
 
