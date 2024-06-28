@@ -3,16 +3,16 @@ import os,sys
 import getopt
 import subprocess
 def usage():
-    print "Usage: %s -d disk -t [read/write/rw] -a [hang/throttle/recover/show] [-i iops -b bandwidth]" % sys.argv[0]
-    print "       -d:    Disk to take action on, for example: sda/sdb/vda/vdb, see command: lsblk "
-    print "       -t:    Io type to take effect, for example: read, write, read&write"
-    print "       -a:    Action to take on device"
-    print "                 'hang', block all IO's on a device"
-    print "                 'throttle', set throttled iops/bps on a device"
-    print "                 'recover', recover io setting without hang or throttle"
-    print "                 'show', show current config settings"
-    print "       -i:    Set iops for a device, only work for 'throttle'"
-    print "       -b:    Set bandwidth for a devivce, only work for 'throttle', unit: bytes/s"
+    print("Usage: %s -d disk -t [read/write/rw] -a [hang/throttle/recover/show] [-i iops -b bandwidth]" % sys.argv[0])
+    print("       -d:    Disk to take action on, for example: sda/sdb/vda/vdb, see command: lsblk ")
+    print("       -t:    Io type to take effect, for example: read, write, read&write")
+    print("       -a:    Action to take on device")
+    print("                 'hang', block all IO's on a device")
+    print("                 'throttle', set throttled iops/bps on a device")
+    print("                 'recover', recover io setting without hang or throttle")
+    print("                 'show', show current config settings")
+    print("       -i:    Set iops for a device, only work for 'throttle'")
+    print("       -b:    Set bandwidth for a devivce, only work for 'throttle', unit: bytes/s")
 class DiskController(object):
     def __init__(self, disk, type, action, iops = None, bps = None):
         self._deviceName = disk
@@ -26,12 +26,12 @@ class DiskController(object):
         (output, tmp) = p.communicate()
         error = p.wait()
         if error != 0:
-            print "ERROR! Command: %s\nOutput: %s\nError code: %d\n" % (cmd, output, error)
+            print("ERROR! Command: %s\nOutput: %s\nError code: %d\n" % (cmd, output, error))
             sys.exit(error)
         return output
     def _getDeviceId(self, disk):
         cmd = "lsblk |grep %s |grep disk |head -1 | awk '{print $2}'" % disk
-        return self._executeCmd(cmd).strip()
+        return self._executeCmd(cmd).decode().strip()
     def _getIo(self, op):
         iops = "Infinite"
         bps = "Infinite"
@@ -60,7 +60,7 @@ class DiskController(object):
             self._setIo("read", 0, 0)
             self._setIo("write", 0, 0)
         else:
-            print "Error! Invalid io type: %s" % self._type
+            print("Error! Invalid io type: %s" % self._type)
             usage()
             sys.exit(1)
     def _hang(self):
@@ -72,7 +72,7 @@ class DiskController(object):
             self._setIo("read", 1, 1)
             self._setIo("write", 1, 1)
         else:
-            print "Error! Invalid io type: %s" % self._type
+            print("Error! Invalid io type: %s" % self._type)
             usage()
             sys.exit(1)
     def _throttle(self):
@@ -84,13 +84,13 @@ class DiskController(object):
             self._setIo("read", self._iops, self._bps)
             self._setIo("write", self._iops, self._bps)
         else:
-            print "Error! Invalid io type: %s" % self._type
+            print("Error! Invalid io type: %s" % self._type)
             usage()
             sys.exit(1)
     def _show(self):
-        print "%-15s %-15s %-15s %-15s" % ("Device", "Operation", "IOPS", "Bandwidth(Bytes)")
-        print self._getIo("read")
-        print self._getIo("write")
+        print("%-15s %-15s %-15s %-15s" % ("Device", "Operation", "IOPS", "Bandwidth(Bytes)"))
+        print(self._getIo("read"))
+        print(self._getIo("write"))
     def process(self):
         if self._action == 'hang':
             self._hang()
@@ -101,7 +101,7 @@ class DiskController(object):
         elif self._action == 'show':
             self._show()
         else:
-            print "Error! Invalid action type: %s" % self._action
+            print("Error! Invalid action type: %s" % self._action)
             usage()
             sys.exit(1)
 def getOpt():
@@ -129,7 +129,7 @@ def getOpt():
         elif opt in ('-b', '--bps'):
             bps = value
     if disk == "" or type == "" or action == "":
-        print "Error! Lack of parameters."
+        print("Error! Lack of parameters.")
         usage()
         sys.exit(1)
     return disk, type, action, iops, bps
